@@ -12,7 +12,7 @@ func (a *DBRepository) StoreEmployee(ctx *gin.Context, employee *models.Employee
 	tx := a.db.WithContext(ctx).Begin()
 	if err := tx.Debug().Create(&employee).Error; err != nil {
 		tx.Rollback()
-		return nil
+		return err
 	}
 	tx.Commit()
 
@@ -24,7 +24,7 @@ func (a *DBRepository) GetEmployee(ctx *gin.Context) (*[]models.Employee, error)
 	tx := a.db.WithContext(ctx).Begin()
 	if err := tx.Find(&employees).Error; err != nil {
 		tx.Rollback()
-		return nil, nil
+		return nil, err
 	}
 	tx.Commit()
 
@@ -38,6 +38,11 @@ func (a *DBRepository) DetailEmployee(ctx *gin.Context, id int64) (*models.Emplo
 	if err := tx.Where("id", id).Find(&employee).Error; err != nil {
 		return nil, err
 	}
+
+	if employee.ID == 0 {
+		return nil, errors.New("employee not found")
+	}
+
 	tx.Commit()
 
 	return &employee, nil
